@@ -9,7 +9,7 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-heading);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -46,75 +46,68 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* Toko Kopi Jaya custom colors */
+  --color-kj-900: #8B1A1A;
+  --color-kj-800: #9B2424;
+  --color-kj-700: #B32F2F;
+  --color-kj-600: #C43626;
+  --color-kj-500: #D95C5C;
+  --color-kj-400: #E88A8A;
+  --color-kj-300: #EF9A9A;
+  --color-kj-200: #F7C5C5;
+  --color-kj-100: #FFCDD2;
+  --color-kj-50: #FFF5F5;
+  --color-gold-500: #FBC02D;
+  --color-gold-400: #FDD835;
+  --color-gold-300: #FFF176;
+  --color-gold-100: #FFF9C4;
+  --color-info-500: #1976D2;
+  --color-info-300: #90CAF9;
+  --color-info-100: #BBDEFB;
+  --color-orange-500: #E64A19;
+  --color-orange-300: #FF7043;
+  --color-orange-100: #FFAB91;
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  /* Toko Kopi Jaya Red Theme */
+  --background: #F7F8FA;
+  --foreground: #333333;
+  --card: #FFFFFF;
+  --card-foreground: #333333;
+  --popover: #FFFFFF;
+  --popover-foreground: #333333;
+  --primary: #B32F2F;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F7F8FA;
+  --secondary-foreground: #333333;
+  --muted: #F1F3F5;
+  --muted-foreground: #888888;
+  --accent: #FFF5F5;
+  --accent-foreground: #B32F2F;
+  --destructive: #D32F2F;
+  --border: #E0E0E0;
+  --input: #E0E0E0;
+  --ring: #D95C5C;
+  --chart-1: #B32F2F;
+  --chart-2: #D95C5C;
+  --chart-3: #FBC02D;
+  --chart-4: #1976D2;
+  --chart-5: #E64A19;
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* Sidebar — dark red brand */
+  --sidebar: #8B1A1A;
+  --sidebar-foreground: #FFFFFF;
+  --sidebar-primary: #D95C5C;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #9B2424;
+  --sidebar-accent-foreground: #FFFFFF;
+  --sidebar-border: #9B2424;
+  --sidebar-ring: #D95C5C;
+
+  --font-heading: var(--font-poppins);
 }
 
 @layer base {
@@ -126,5 +119,9 @@
   }
   html {
     @apply font-sans;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading), var(--font-sans);
+    font-weight: 600;
   }
 }
