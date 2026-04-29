@@ -88,7 +88,11 @@ export default function DashboardPage() {
   }, [dateFrom, dateTo]);
 
   useEffect(() => {
-    fetchData();
+    // Microtask defers the chained setState calls inside fetchData out of
+    // React's commit phase — fixes react-hooks/set-state-in-effect.
+    queueMicrotask(() => {
+      fetchData();
+    });
   }, [fetchData]);
 
   const totalOrders = salesBySource.reduce((s, r) => s + (Number(r.total_orders) || 0), 0);

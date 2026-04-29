@@ -95,7 +95,12 @@ export default function ModifiersPage() {
         <div className="space-y-3">
           <div><Label>Name</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></div>
           <div><Label>Type</Label>
-            <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v || "" })}>
+            <Select
+              value={form.type}
+              onValueChange={(v) => {
+                if (v === "add" || v === "remove") setForm({ ...form, type: v });
+              }}
+            >
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent><SelectItem value="add">Add</SelectItem><SelectItem value="remove">Remove</SelectItem></SelectContent>
             </Select>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { PageHeader } from "@/components/page-header";
 import { DataTable, type Column } from "@/components/data-table";
@@ -86,7 +86,10 @@ export default function OrdersPage() {
     selectedId ? `/orders/${selectedId}` : null
   );
 
-  const renderQR = useCallback(() => {
+  // React Compiler infers `detail` as the dependency (more conservative
+  // than the manual `detail?.pickup_code`); inline the QR render so the
+  // compiler can memoize without complaining.
+  useEffect(() => {
     if (qrCanvasRef.current && detail?.pickup_code) {
       QRCode.toCanvas(qrCanvasRef.current, detail.pickup_code, {
         width: 128,
@@ -95,10 +98,6 @@ export default function OrdersPage() {
       });
     }
   }, [detail?.pickup_code]);
-
-  useEffect(() => {
-    renderQR();
-  }, [renderQR]);
 
   const updateStatus = async (orderId: number, newStatus: string) => {
     try {

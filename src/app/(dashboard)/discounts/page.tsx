@@ -140,7 +140,12 @@ export default function DiscountsPage() {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div><Label>Type</Label>
-              <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v || "" })}>
+              <Select
+                value={form.type}
+                onValueChange={(v) => {
+                  if (v === "percentage" || v === "nominal") setForm({ ...form, type: v });
+                }}
+              >
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent><SelectItem value="percentage">Percentage</SelectItem><SelectItem value="nominal">Nominal</SelectItem></SelectContent>
               </Select>

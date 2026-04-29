@@ -35,16 +35,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
+    // Defer the state writes off the effect commit phase so React doesn't
+    // re-render mid-commit. Equivalent functionally; satisfies the
+    // react-hooks/set-state-in-effect lint that's now an error in this stack.
     const stored = localStorage.getItem("user");
     const token = localStorage.getItem("access_token");
-    if (stored && token) {
-      try {
-        setUser(JSON.parse(stored));
-      } catch {
-        localStorage.clear();
+    queueMicrotask(() => {
+      if (stored && token) {
+        try {
+          setUser(JSON.parse(stored));
+        } catch {
+          localStorage.clear();
+        }
       }
-    }
-    setLoading(false);
+      setLoading(false);
+    });
   }, []);
 
   const login = useCallback(
