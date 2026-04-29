@@ -119,6 +119,50 @@ async function fetchApi<T>(
   return res.json();
 }
 
+/**
+ * Multipart/form-data upload. Strips the JSON Content-Type so the browser
+ * sets the correct multipart boundary itself. Reuses the same auth +
+ * 401-refresh flow as the JSON helpers.
+ */
+async function uploadApi<T>(
+  endpoint: string,
+  formData: FormData,
+): Promise<ApiResponse<T>> {
+  const accessToken =
+    typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+
+  const headers: Record<string, string> = {};
+  if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
+  // Note: do NOT set Content-Type — browser inserts the boundary param.
+
+  const res = await fetch(`${API_BASE}${endpoint}`, {
+    method: "POST",
+    headers,
+    body: formData,
+  });
+
+  if (res.status === 401) {
+    const newToken = await attemptTokenRefresh().catch(() => null);
+    if (newToken) {
+      headers["Authorization"] = `Bearer ${newToken}`;
+      const retry = await fetch(`${API_BASE}${endpoint}`, {
+        method: "POST",
+        headers,
+        body: formData,
+      });
+      if (retry.ok) return retry.json();
+    }
+    redirectToLogin();
+    throw new ApiError(401, "Unauthorized");
+  }
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new ApiError(res.status, body.message || res.statusText, body);
+  }
+  return res.json();
+}
+
 export const api = {
   get: <T>(endpoint: string, options?: FetchOptions) =>
     fetchApi<T>(endpoint, { method: "GET", ...options }),
@@ -131,6 +175,9 @@ export const api = {
 
   delete: <T>(endpoint: string, options?: FetchOptions) =>
     fetchApi<T>(endpoint, { method: "DELETE", ...options }),
+
+  upload: <T>(endpoint: string, formData: FormData) =>
+    uploadApi<T>(endpoint, formData),
 };
 
 export { ApiError };

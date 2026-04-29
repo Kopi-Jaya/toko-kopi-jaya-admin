@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { PageHeader } from "@/components/page-header";
 import { DataTable, type Column } from "@/components/data-table";
 import { CrudDialog } from "@/components/crud-dialog";
@@ -49,6 +49,10 @@ export default function ProductsPage() {
   });
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; label: string } | null>(null);
   const [dialogLoading, setDialogLoading] = useState(false);
+  // Pending image — uploaded after the product is saved (the upload endpoint
+  // requires an existing product_id). Cleared on dialog close.
+  const [pendingImage, setPendingImage] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const { data, meta, loading, refetch } = useApiList<Product>("/products", {
     page, limit: 20, params: { search: search || undefined },
@@ -61,6 +65,7 @@ export default function ProductsPage() {
       setCategories(res.data);
       setEditing(null);
       setForm({ name: "", category_id: "", base_price: "", earning_points: "0", description: "", img_url: "", is_available: true });
+      setPendingImage(null);
       setDialogOpen(true);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to load categories");
@@ -80,12 +85,29 @@ export default function ProductsPage() {
         base_price: String(p.base_price), earning_points: String(p.earning_points),
         description: p.description || "", img_url: p.img_url || "", is_available: p.is_available,
       });
+      setPendingImage(null);
       setDialogOpen(true);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to load categories");
     } finally {
       setDialogLoading(false);
     }
+  };
+
+  const handleFilePick = (file: File | null) => {
+    if (!file) {
+      setPendingImage(null);
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image must be 5 MB or smaller");
+      return;
+    }
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      toast.error("Only JPEG, PNG, or WebP images");
+      return;
+    }
+    setPendingImage(file);
   };
 
   const handleSubmit = async () => {
@@ -96,16 +118,31 @@ export default function ProductsPage() {
         base_price: Number(form.base_price),
         earning_points: Number(form.earning_points),
         description: form.description || undefined,
-        img_url: form.img_url || undefined,
+        // Only persist a manually-typed URL when the user didn't pick a file —
+        // an actual upload below will overwrite img_url anyway.
+        img_url: pendingImage ? undefined : form.img_url || undefined,
         is_available: form.is_available,
       };
+
+      let productId: number;
       if (editing) {
-        await api.patch(`/products/${editing.product_id}`, body);
-        toast.success("Product updated");
+        const res = await api.patch<Product>(`/products/${editing.product_id}`, body);
+        productId = res.data.product_id;
       } else {
-        await api.post("/products", body);
-        toast.success("Product created");
+        const res = await api.post<Product>("/products", body);
+        productId = res.data.product_id;
       }
+
+      // Upload the image as a follow-up call. The endpoint replaces img_url
+      // server-side and best-effort cleans up the previous file.
+      if (pendingImage) {
+        const fd = new FormData();
+        fd.append("file", pendingImage);
+        await api.upload<Product>(`/products/${productId}/image`, fd);
+      }
+
+      toast.success(editing ? "Product updated" : "Product created");
+      setPendingImage(null);
       refetch();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Operation failed");
@@ -245,8 +282,64 @@ export default function ProductsPage() {
             </div>
           </div>
           <div>
-            <Label>Image URL</Label>
-            <Input value={form.img_url} onChange={(e) => setForm({ ...form, img_url: e.target.value })} placeholder="https://..." />
+            <Label>Image</Label>
+            <div className="flex items-start gap-3">
+              {/* Preview: pending file > saved URL > placeholder */}
+              <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-muted">
+                {pendingImage ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={URL.createObjectURL(pendingImage)}
+                    alt="preview"
+                    className="h-full w-full object-cover"
+                  />
+                ) : form.img_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={form.img_url}
+                    alt="current"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <span className="text-xs text-muted-foreground">No image</span>
+                )}
+              </div>
+              <div className="flex-1 space-y-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={(e) => handleFilePick(e.target.files?.[0] ?? null)}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {pendingImage ? "Change file" : form.img_url ? "Replace image" : "Choose file"}
+                </Button>
+                {pendingImage && (
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <span className="truncate">{pendingImage.name}</span>
+                    <button
+                      type="button"
+                      className="text-destructive hover:underline"
+                      onClick={() => {
+                        setPendingImage(null);
+                        if (fileInputRef.current) fileInputRef.current.value = "";
+                      }}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  JPEG, PNG, or WebP. Max 5 MB.
+                </p>
+              </div>
+            </div>
           </div>
           <div>
             <Label>Description</Label>
