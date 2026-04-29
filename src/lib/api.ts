@@ -1,4 +1,11 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api/v1";
+// Default points at the deployed Dokploy backend so `npm run dev` works
+// without per-developer .env files. Override via `.env.local` for local
+// backend work:
+//   NEXT_PUBLIC_API_URL=http://localhost:3001/api/v1
+// (Note: localhost:3000 conflicts with Next.js's own dev port — use 3001+.)
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_URL ||
+  "https://toko-kopi-jaya-api-4w8wou-571f57-15-235-165-81.traefik.me/api/v1";
 
 interface FetchOptions extends RequestInit {
   token?: string;
