@@ -34,7 +34,7 @@ interface SalesBySource {
 }
 
 interface ProductPerformance {
-  product_name: string;
+  name: string;
   total_quantity_sold: number;
   total_revenue: number;
 }
@@ -76,9 +76,21 @@ export default function DashboardPage() {
       api.get<MemberLoyalty[]>(`/analytics/member-loyalty${limitSuffix}`),
     ])
       .then(([sales, products, members]) => {
-        setSalesBySource(sales.data);
-        setProductPerf(products.data);
-        setMemberLoyalty(members.data);
+        setSalesBySource(sales.data.map((r: SalesBySource) => ({
+          ...r,
+          total_orders: Number(r.total_orders),
+          total_revenue: Number(r.total_revenue),
+        })));
+        setProductPerf(products.data.map((r: ProductPerformance) => ({
+          ...r,
+          total_quantity_sold: Number(r.total_quantity_sold),
+          total_revenue: Number(r.total_revenue),
+        })));
+        setMemberLoyalty(members.data.map((r: MemberLoyalty) => ({
+          ...r,
+          lifetime_points_earned: Number(r.lifetime_points_earned),
+          current_points: Number(r.current_points),
+        })));
       })
       .catch((err) => {
         console.error("Analytics fetch failed:", err);
@@ -181,7 +193,7 @@ export default function DashboardPage() {
                 <BarChart data={productPerf} layout="vertical" margin={{ left: 80 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis type="number" />
-                  <YAxis type="category" dataKey="product_name" width={75} tick={{ fontSize: 12 }} />
+                  <YAxis type="category" dataKey="name" width={75} tick={{ fontSize: 12 }} />
                   <Tooltip formatter={(v) => formatRupiah(Number(v))} />
                   <Bar dataKey="total_revenue" fill="#B32F2F" radius={[0, 4, 4, 0]} />
                 </BarChart>
