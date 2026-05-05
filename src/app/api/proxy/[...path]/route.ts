@@ -17,7 +17,12 @@ async function handler(
   context: { params: Promise<{ path: string[] }> }
 ) {
   const { path } = await context.params;
-  const url = `${SERVER_HTTP}${API_PREFIX}/${path.join("/")}${req.nextUrl.search}`;
+  const pathStr = path.join("/");
+  // Static uploads (images) live at /uploads/… on the backend, not under /api/v1.
+  const backendPath = pathStr.startsWith("uploads/")
+    ? `/${pathStr}`
+    : `${API_PREFIX}/${pathStr}`;
+  const url = `${SERVER_HTTP}${backendPath}${req.nextUrl.search}`;
 
   const headers: Record<string, string> = {
     host: TRAEFIK_HOST,

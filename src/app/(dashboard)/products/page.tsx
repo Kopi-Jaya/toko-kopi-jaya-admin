@@ -15,6 +15,7 @@ import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
 import { DeleteConfirmDialog, type DeleteLink } from "@/components/delete-confirm-dialog";
+import { toProxyImageUrl } from "@/lib/image-url";
 
 interface Product {
   product_id: number;
@@ -170,7 +171,7 @@ export default function ProductsPage() {
       render: (p) => (
         <div className="flex items-center gap-3">
           {p.img_url ? (
-            <img src={p.img_url} alt={p.name} className="h-10 w-10 rounded-lg object-cover" />
+            <img src={toProxyImageUrl(p.img_url) ?? p.img_url} alt={p.name} className="h-10 w-10 rounded-lg object-cover" />
           ) : (
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-kj-50 text-kj-700 text-xs font-medium">
               {p.name.charAt(0)}
@@ -313,7 +314,7 @@ export default function ProductsPage() {
                 ) : form.img_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={form.img_url}
+                    src={toProxyImageUrl(form.img_url) ?? form.img_url}
                     alt="current"
                     className="h-full w-full object-cover"
                   />
