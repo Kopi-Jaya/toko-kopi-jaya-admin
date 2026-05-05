@@ -20,7 +20,7 @@ interface Category {
   name: string;
   description: string | null;
   is_active: boolean;
-  productCount?: number;
+  products_count?: number;
 }
 
 export default function CategoriesPage() {
@@ -75,7 +75,7 @@ export default function CategoriesPage() {
   const columns: Column<Category>[] = [
     { key: "name", header: "Name", render: (c) => <span className="font-medium">{c.name}</span> },
     { key: "description", header: "Description", render: (c) => c.description || "—" },
-    { key: "productCount", header: "Products", className: "text-center", render: (c) => c.productCount ?? "—" },
+    { key: "productCount", header: "Products", className: "text-center", render: (c) => c.products_count ?? "—" },
     {
       key: "is_active", header: "Status",
       render: (c) => <Badge variant="outline" className={c.is_active ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}>{c.is_active ? "Active" : "Inactive"}</Badge>,
@@ -85,7 +85,7 @@ export default function CategoriesPage() {
       render: (c) => (
         <div className="flex justify-end gap-1">
           <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); openEdit(c); }}><Pencil className="h-4 w-4" /></Button>
-          <Button size="sm" variant="ghost" className="text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: c.category_id, label: c.name, links: [{ label: "products assigned", count: c.productCount ?? 0 }] }); }}><Trash2 className="h-4 w-4" /></Button>
+          <Button size="sm" variant="ghost" className="text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: c.category_id, label: c.name, links: [{ label: "products assigned", count: c.products_count ?? 0 }] }); }}><Trash2 className="h-4 w-4" /></Button>
         </div>
       ),
     },
