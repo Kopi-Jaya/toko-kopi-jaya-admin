@@ -14,7 +14,7 @@ import { useApiList } from "@/hooks/use-api";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Gift, Loader2 } from "lucide-react";
-import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
+import { DeleteConfirmDialog, type DeleteLink } from "@/components/delete-confirm-dialog";
 
 interface Reward {
   reedem_id: number;
@@ -41,7 +41,7 @@ export default function RewardsPage() {
     stock_limit: "",
     is_active: true,
   });
-  const [deleteTarget, setDeleteTarget] = useState<{ id: number; label: string } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: number; label: string; links?: DeleteLink[] } | null>(null);
   const [dialogLoading, setDialogLoading] = useState(false);
 
   const { data, loading, refetch } = useApiList<Reward>("/redeem");
@@ -140,7 +140,7 @@ export default function RewardsPage() {
           <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); openEdit(r); }} disabled={dialogLoading}>
             <Pencil className="h-4 w-4" />
           </Button>
-          <Button size="sm" variant="ghost" className="text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: r.reedem_id, label: r.product?.name || "reward" }); }}>
+          <Button size="sm" variant="ghost" className="text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: r.reedem_id, label: r.product?.name || "reward", links: [{ label: "redemptions", count: r.redemption_count }] }); }}>
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>
@@ -163,6 +163,7 @@ export default function RewardsPage() {
         onOpenChange={(open) => !open && setDeleteTarget(null)}
         title={`Delete "${deleteTarget?.label}"?`}
         description="This action cannot be undone."
+        links={deleteTarget?.links}
         onConfirm={handleDelete}
       />
 

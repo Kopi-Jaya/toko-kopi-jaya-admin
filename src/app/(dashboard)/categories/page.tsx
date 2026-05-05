@@ -13,7 +13,7 @@ import { useApiList } from "@/hooks/use-api";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2 } from "lucide-react";
-import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
+import { DeleteConfirmDialog, type DeleteLink } from "@/components/delete-confirm-dialog";
 
 interface Category {
   category_id: number;
@@ -27,7 +27,7 @@ export default function CategoriesPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Category | null>(null);
   const [form, setForm] = useState({ name: "", description: "", is_active: true });
-  const [deleteTarget, setDeleteTarget] = useState<{ id: number; label: string } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: number; label: string; links?: DeleteLink[] } | null>(null);
 
   const { data, loading, refetch } = useApiList<Category>("/categories");
 
@@ -85,7 +85,7 @@ export default function CategoriesPage() {
       render: (c) => (
         <div className="flex justify-end gap-1">
           <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); openEdit(c); }}><Pencil className="h-4 w-4" /></Button>
-          <Button size="sm" variant="ghost" className="text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: c.category_id, label: c.name }); }}><Trash2 className="h-4 w-4" /></Button>
+          <Button size="sm" variant="ghost" className="text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: c.category_id, label: c.name, links: [{ label: "products assigned", count: c.productCount ?? 0 }] }); }}><Trash2 className="h-4 w-4" /></Button>
         </div>
       ),
     },
@@ -102,6 +102,7 @@ export default function CategoriesPage() {
         onOpenChange={(open) => !open && setDeleteTarget(null)}
         title={`Delete "${deleteTarget?.label}"?`}
         description="This action cannot be undone."
+        links={deleteTarget?.links}
         onConfirm={handleDelete}
       />
       <CrudDialog open={dialogOpen} onOpenChange={setDialogOpen} title={editing ? "Edit Category" : "Add Category"} onSubmit={handleSubmit}>

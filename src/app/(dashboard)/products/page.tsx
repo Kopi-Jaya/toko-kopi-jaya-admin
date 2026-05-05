@@ -8,13 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useApiList } from "@/hooks/use-api";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
-import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
+import { DeleteConfirmDialog, type DeleteLink } from "@/components/delete-confirm-dialog";
 
 interface Product {
   product_id: number;
@@ -47,7 +47,8 @@ export default function ProductsPage() {
     name: "", category_id: "", base_price: "", earning_points: "0",
     description: "", img_url: "", is_available: true,
   });
-  const [deleteTarget, setDeleteTarget] = useState<{ id: number; label: string } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: number; label: string; links?: DeleteLink[] } | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [dialogLoading, setDialogLoading] = useState(false);
   // Pending image — uploaded after the product is saved (the upload endpoint
   // requires an existing product_id). Cleared on dialog close.
@@ -214,8 +215,19 @@ export default function ProductsPage() {
           <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); openEdit(p); }} disabled={dialogLoading}>
             <Pencil className="h-4 w-4" />
           </Button>
-          <Button size="sm" variant="ghost" className="text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: p.product_id, label: p.name }); }}>
-            <Trash2 className="h-4 w-4" />
+          <Button size="sm" variant="ghost" className="text-destructive" disabled={deleteLoading} onClick={async (e) => {
+            e.stopPropagation();
+            setDeleteLoading(true);
+            try {
+              const res = await api.get<{ order_items_count?: number }>(`/products/${p.product_id}`);
+              setDeleteTarget({ id: p.product_id, label: p.name, links: [{ label: "order items", count: res.data.order_items_count ?? 0 }] });
+            } catch {
+              setDeleteTarget({ id: p.product_id, label: p.name });
+            } finally {
+              setDeleteLoading(false);
+            }
+          }}>
+            {deleteLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
           </Button>
         </div>
       ),
@@ -246,6 +258,7 @@ export default function ProductsPage() {
         onOpenChange={(open) => !open && setDeleteTarget(null)}
         title={`Delete "${deleteTarget?.label}"?`}
         description="This action cannot be undone."
+        links={deleteTarget?.links}
         onConfirm={handleDelete}
       />
 
@@ -263,7 +276,11 @@ export default function ProductsPage() {
           <div>
             <Label>Category</Label>
             <Select value={form.category_id} onValueChange={(v) => setForm({ ...form, category_id: v || "" })}>
-              <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
+              <SelectTrigger className="w-full">
+                {form.category_id
+                  ? <span>{categories.find(c => String(c.category_id) === form.category_id)?.name}</span>
+                  : <span className="text-muted-foreground">Select category</span>}
+              </SelectTrigger>
               <SelectContent>
                 {categories.map((c) => (
                   <SelectItem key={c.category_id} value={String(c.category_id)}>{c.name}</SelectItem>

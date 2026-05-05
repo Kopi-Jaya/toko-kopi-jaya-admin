@@ -12,8 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { useApiList } from "@/hooks/use-api";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2 } from "lucide-react";
-import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
+import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
+import { DeleteConfirmDialog, type DeleteLink } from "@/components/delete-confirm-dialog";
 
 interface Modifier {
   modifier_id: number;
@@ -31,7 +31,8 @@ export default function ModifiersPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Modifier | null>(null);
   const [form, setForm] = useState<{ name: string; type: "add" | "remove"; extra_price: string; is_active: boolean }>({ name: "", type: "add", extra_price: "0", is_active: true });
-  const [deleteTarget, setDeleteTarget] = useState<{ id: number; label: string } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: number; label: string; links?: DeleteLink[] } | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const { data, loading, refetch } = useApiList<Modifier>("/modifiers");
 
@@ -72,7 +73,18 @@ export default function ModifiersPage() {
       render: (m) => (
         <div className="flex justify-end gap-1">
           <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); openEdit(m); }}><Pencil className="h-4 w-4" /></Button>
-          <Button size="sm" variant="ghost" className="text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: m.modifier_id, label: m.name }); }}><Trash2 className="h-4 w-4" /></Button>
+          <Button size="sm" variant="ghost" className="text-destructive" disabled={deleteLoading} onClick={async (e) => {
+            e.stopPropagation();
+            setDeleteLoading(true);
+            try {
+              const res = await api.get<{ order_usage_count?: number }>(`/modifiers/${m.modifier_id}`);
+              setDeleteTarget({ id: m.modifier_id, label: m.name, links: [{ label: "order items using this modifier", count: res.data.order_usage_count ?? 0 }] });
+            } catch {
+              setDeleteTarget({ id: m.modifier_id, label: m.name });
+            } finally {
+              setDeleteLoading(false);
+            }
+          }}>{deleteLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}</Button>
         </div>
       ),
     },
@@ -89,6 +101,7 @@ export default function ModifiersPage() {
         onOpenChange={(open) => !open && setDeleteTarget(null)}
         title={`Delete "${deleteTarget?.label}"?`}
         description="This action cannot be undone."
+        links={deleteTarget?.links}
         onConfirm={handleDelete}
       />
       <CrudDialog open={dialogOpen} onOpenChange={setDialogOpen} title={editing ? "Edit Modifier" : "Add Modifier"} onSubmit={handleSubmit}>

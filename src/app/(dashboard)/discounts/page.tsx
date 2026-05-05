@@ -13,7 +13,7 @@ import { useApiList } from "@/hooks/use-api";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2 } from "lucide-react";
-import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
+import { DeleteConfirmDialog, type DeleteLink } from "@/components/delete-confirm-dialog";
 
 interface Discount {
   discount_id: number;
@@ -37,7 +37,7 @@ function formatRupiah(n: number) {
 export default function DiscountsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Discount | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<{ id: number; label: string } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: number; label: string; links?: DeleteLink[] } | null>(null);
   const [form, setForm] = useState<{
     name: string; code: string; type: "nominal" | "percentage"; value: string;
     min_purchase: string; max_discount: string; usage_limit: string;
@@ -113,7 +113,7 @@ export default function DiscountsPage() {
       render: (d) => (
         <div className="flex justify-end gap-1">
           <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); openEdit(d); }}><Pencil className="h-4 w-4" /></Button>
-          <Button size="sm" variant="ghost" className="text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: d.discount_id, label: d.name }); }}><Trash2 className="h-4 w-4" /></Button>
+          <Button size="sm" variant="ghost" className="text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: d.discount_id, label: d.name, links: [{ label: "times used", count: d.usage_count }] }); }}><Trash2 className="h-4 w-4" /></Button>
         </div>
       ),
     },
@@ -130,6 +130,7 @@ export default function DiscountsPage() {
         onOpenChange={(open) => !open && setDeleteTarget(null)}
         title={`Delete "${deleteTarget?.label}"?`}
         description="This action cannot be undone."
+        links={deleteTarget?.links}
         onConfirm={handleDelete}
       />
       <CrudDialog open={dialogOpen} onOpenChange={setDialogOpen} title={editing ? "Edit Discount" : "Add Discount"} onSubmit={handleSubmit}>

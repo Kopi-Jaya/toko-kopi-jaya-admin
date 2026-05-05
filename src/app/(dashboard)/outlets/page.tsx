@@ -12,8 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { useApiList } from "@/hooks/use-api";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, MapPin } from "lucide-react";
-import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
+import { Plus, Pencil, Trash2, MapPin, Loader2 } from "lucide-react";
+import { DeleteConfirmDialog, type DeleteLink } from "@/components/delete-confirm-dialog";
 
 interface Outlet {
   outlet_id: number;
@@ -35,7 +35,8 @@ export default function OutletsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Outlet | null>(null);
   const [form, setForm] = useState({ name: "", address: "", phone: "", latitude: "", longitude: "", status: "active" });
-  const [deleteTarget, setDeleteTarget] = useState<{ id: number; label: string } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: number; label: string; links?: DeleteLink[] } | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const { data, loading, refetch } = useApiList<Outlet>("/outlets");
 
@@ -90,7 +91,21 @@ export default function OutletsPage() {
       render: (o) => (
         <div className="flex justify-end gap-1">
           <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); openEdit(o); }}><Pencil className="h-4 w-4" /></Button>
-          <Button size="sm" variant="ghost" className="text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: o.outlet_id, label: o.name }); }}><Trash2 className="h-4 w-4" /></Button>
+          <Button size="sm" variant="ghost" className="text-destructive" disabled={deleteLoading} onClick={async (e) => {
+            e.stopPropagation();
+            setDeleteLoading(true);
+            try {
+              const res = await api.get<{ staff_count?: number; orders_count?: number }>(`/outlets/${o.outlet_id}`);
+              setDeleteTarget({ id: o.outlet_id, label: o.name, links: [
+                { label: "staff members", count: res.data.staff_count ?? 0 },
+                { label: "orders", count: res.data.orders_count ?? 0 },
+              ]});
+            } catch {
+              setDeleteTarget({ id: o.outlet_id, label: o.name });
+            } finally {
+              setDeleteLoading(false);
+            }
+          }}>{deleteLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}</Button>
         </div>
       ),
     },
@@ -107,6 +122,7 @@ export default function OutletsPage() {
         onOpenChange={(open) => !open && setDeleteTarget(null)}
         title={`Delete "${deleteTarget?.label}"?`}
         description="This action cannot be undone."
+        links={deleteTarget?.links}
         onConfirm={handleDelete}
       />
       <CrudDialog open={dialogOpen} onOpenChange={setDialogOpen} title={editing ? "Edit Outlet" : "Add Outlet"} onSubmit={handleSubmit}>
