@@ -84,9 +84,7 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
         <Link href="/" className="flex items-center gap-3 group-data-[collapsible=icon]:justify-center">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/20 font-heading text-sm font-bold text-white">
-            KJ
-          </div>
+          <img src="/logo.png" alt="Kopi Jaya" className="h-9 w-9 shrink-0 rounded-lg object-cover" />
           <div className="flex flex-col group-data-[collapsible=icon]:hidden">
             <span className="text-sm font-semibold text-white">Toko Kopi Jaya</span>
             <span className="text-xs text-white/60">Admin Dashboard</span>
