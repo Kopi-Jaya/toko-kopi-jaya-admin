@@ -49,7 +49,10 @@ async function handler(
     : resHeaders["content-type"];
   if (resCt) outHeaders.set("content-type", resCt);
 
-  return new NextResponse(resBuffer, { status: statusCode, headers: outHeaders });
+  // 204/205/304 are null-body statuses — passing any body (even empty) throws
+  // "Invalid response status code N" in the Fetch API Response constructor.
+  const nullBodyStatus = statusCode === 204 || statusCode === 205 || statusCode === 304;
+  return new NextResponse(nullBodyStatus ? null : resBuffer, { status: statusCode, headers: outHeaders });
 }
 
 export const GET = handler;
