@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { useApiList } from "@/hooks/use-api";
 import { api } from "@/lib/api";
+import { useScope } from "@/lib/scope";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
 import { DeleteConfirmDialog, type DeleteLink } from "@/components/delete-confirm-dialog";
@@ -42,8 +43,13 @@ export default function StaffPage() {
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; label: string; links?: DeleteLink[] } | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [dialogLoading, setDialogLoading] = useState(false);
+  const { currentOutletId } = useScope();
 
-  const { data, meta, loading, refetch } = useApiList<Staff>("/staff", { page, limit: 20 });
+  const { data, meta, loading, refetch } = useApiList<Staff>("/staff", {
+    page,
+    limit: 20,
+    params: { outlet_id: currentOutletId ?? undefined },
+  });
 
   const loadOutlets = async () => {
     const res = await api.get<Outlet[]>("/outlets");

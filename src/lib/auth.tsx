@@ -11,13 +11,24 @@ import {
 import { useRouter } from "next/navigation";
 import { api } from "./api";
 
-interface User {
+export type StaffRole =
+  | "super_admin"
+  | "admin"
+  | "manager"
+  | "cashier"
+  | "barista";
+
+export interface User {
   id: number;
   name: string;
   username?: string;
   email?: string;
-  role: "admin" | "manager" | "cashier" | "barista";
+  role: StaffRole;
   type: "staff" | "member";
+  /// `null` for super_admin (cross-outlet) or members; otherwise the
+  /// outlet the staff member is assigned to. Read by ScopeContext to
+  /// decide whether the user is locked to one outlet.
+  outlet_id: number | null;
 }
 
 interface AuthContextType {
@@ -57,25 +68,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data } = await api.post<{
         type: string;
         role: string;
-        user: { staff_id?: number; member_id?: number; name: string; username?: string; email?: string };
+        user: {
+          id?: number;
+          staff_id?: number;
+          member_id?: number;
+          name: string;
+          username?: string;
+          email?: string;
+          outlet_id?: number | null;
+        };
         access_token: string;
         refresh_token: string;
       }>("/auth/login", { identifier, password });
 
-      if (data.type !== "staff" || !["admin", "manager"].includes(data.role)) {
-        throw new Error("Access denied. Admin or Manager role required.");
+      const allowedRoles = ["super_admin", "admin", "manager"];
+      if (data.type !== "staff" || !allowedRoles.includes(data.role)) {
+        throw new Error("Access denied. Admin, Manager, or Super Admin role required.");
       }
 
       localStorage.setItem("access_token", data.access_token);
       localStorage.setItem("refresh_token", data.refresh_token);
 
       const userData: User = {
-        id: data.user.staff_id || data.user.member_id || 0,
+        // Backend currently returns `id`; older code looked for
+        // `staff_id`/`member_id`. Honor any of them.
+        id:
+          data.user.id ??
+          data.user.staff_id ??
+          data.user.member_id ??
+          0,
         name: data.user.name,
         username: data.user.username,
         email: data.user.email,
-        role: data.role as User["role"],
+        role: data.role as StaffRole,
         type: data.type as User["type"],
+        outlet_id: data.user.outlet_id ?? null,
       };
 
       localStorage.setItem("user", JSON.stringify(userData));

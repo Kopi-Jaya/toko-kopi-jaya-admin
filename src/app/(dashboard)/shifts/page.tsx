@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/page-header";
 import { DataTable, type Column } from "@/components/data-table";
 import { Badge } from "@/components/ui/badge";
 import { useApiList } from "@/hooks/use-api";
+import { useScope } from "@/lib/scope";
 
 interface Shift {
   shift_id: number;
@@ -25,7 +26,12 @@ function formatRupiah(n: number | null) {
 
 export default function ShiftsPage() {
   const [page, setPage] = useState(1);
-  const { data, meta, loading } = useApiList<Shift>("/shifts", { page, limit: 20 });
+  const { currentOutletId } = useScope();
+  const { data, meta, loading } = useApiList<Shift>("/shifts", {
+    page,
+    limit: 20,
+    params: { outlet_id: currentOutletId ?? undefined },
+  });
 
   const columns: Column<Shift>[] = [
     { key: "staff", header: "Staff", render: (s) => <span className="font-medium">{s.staff?.name || "—"}</span> },

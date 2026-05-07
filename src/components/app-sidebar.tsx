@@ -31,9 +31,23 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { useAuth } from "@/lib/auth";
+import { useAuth, type StaffRole } from "@/lib/auth";
 
-const navGroups = [
+interface NavItem {
+  title: string;
+  href: string;
+  icon: typeof LayoutDashboard;
+  /// Roles allowed to see this item. `undefined` means everyone with
+  /// dashboard access (admin/manager/super_admin).
+  roles?: StaffRole[];
+}
+
+interface NavGroup {
+  label: string;
+  items: NavItem[];
+}
+
+const navGroups: NavGroup[] = [
   {
     label: "Overview",
     items: [
@@ -61,8 +75,20 @@ const navGroups = [
   {
     label: "Operations",
     items: [
-      { title: "Outlets", href: "/outlets", icon: MapPin },
-      { title: "Staff", href: "/staff", icon: UserCog },
+      // Outlet + staff management is super_admin only — outlet admins
+      // shouldn't be minting accounts or onboarding new branches.
+      {
+        title: "Outlets",
+        href: "/outlets",
+        icon: MapPin,
+        roles: ["super_admin"],
+      },
+      {
+        title: "Staff",
+        href: "/staff",
+        icon: UserCog,
+        roles: ["super_admin"],
+      },
       { title: "Shifts", href: "/shifts", icon: Clock },
       { title: "Discounts", href: "/discounts", icon: Ticket },
     ],
@@ -79,6 +105,17 @@ const navGroups = [
 export function AppSidebar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const role = user?.role;
+
+  const visibleGroups = navGroups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => {
+        if (!item.roles) return true;
+        return role ? item.roles.includes(role) : false;
+      }),
+    }))
+    .filter((group) => group.items.length > 0);
 
   return (
     <Sidebar collapsible="icon">
@@ -93,7 +130,7 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        {navGroups.map((group) => (
+        {visibleGroups.map((group) => (
           <SidebarGroup key={group.label}>
             <SidebarGroupLabel className="text-white/50 text-xs uppercase tracking-wider">
               {group.label}

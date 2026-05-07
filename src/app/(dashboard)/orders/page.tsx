@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useApiList, useApiGet } from "@/hooks/use-api";
 import { api } from "@/lib/api";
+import { useScope } from "@/lib/scope";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Plus, Loader2 } from "lucide-react";
@@ -72,6 +73,7 @@ export default function OrdersPage() {
   const [source, setSource] = useState<string>("");
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const qrCanvasRef = useRef<HTMLCanvasElement>(null);
+  const { currentOutletId } = useScope();
 
   const { data, meta, loading, refetch } = useApiList<Order>("/orders/admin", {
     page,
@@ -79,6 +81,7 @@ export default function OrdersPage() {
     params: {
       status: status || undefined,
       source: source || undefined,
+      outlet_id: currentOutletId ?? undefined,
     },
   });
 

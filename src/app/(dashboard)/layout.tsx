@@ -4,7 +4,9 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
+import { OutletScopePicker } from "@/components/outlet-scope-picker";
 import { AuthProvider, useAuth } from "@/lib/auth";
+import { ScopeProvider } from "@/lib/scope";
 
 function DashboardShell({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -30,6 +32,9 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
+        <header className="flex h-14 items-center justify-end border-b border-border bg-card px-6">
+          <OutletScopePicker />
+        </header>
         <main className="flex-1 p-6">{children}</main>
       </SidebarInset>
     </SidebarProvider>
@@ -43,7 +48,9 @@ export default function DashboardLayout({
 }) {
   return (
     <AuthProvider>
-      <DashboardShell>{children}</DashboardShell>
+      <ScopeProvider>
+        <DashboardShell>{children}</DashboardShell>
+      </ScopeProvider>
     </AuthProvider>
   );
 }
