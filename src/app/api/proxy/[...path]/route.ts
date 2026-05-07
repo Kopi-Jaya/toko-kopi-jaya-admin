@@ -3,11 +3,18 @@ export const runtime = "nodejs";
 import { NextRequest, NextResponse } from "next/server";
 import { Agent, request as undiciRequest } from "undici";
 
-// Connect directly to the server IP on port 80 (HTTP) to bypass Fortinet's
-// SNI-based HTTPS filtering. Traefik routes by the Host header, so we pass
-// the .local virtual hostname it expects. No DNS resolution needed.
-const SERVER_HTTP = "http://15.235.165.81";
-const TRAEFIK_HOST = "toko-kopi-jaya-api.local";
+// Two deployment modes:
+//   - **Local dev** (default): hit the server's public IP over HTTP and pass
+//     the Traefik virtual host via the `Host` header. Bypasses Fortinet's
+//     SNI-based HTTPS filtering on Davis's home/campus networks.
+//   - **Dokploy** (when BACKEND_URL is set): connect to the backend's
+//     internal Docker hostname (`http://toko-kopi-jaya-api-4w8wou:3000`).
+//     The container is reachable directly on the swarm network, so no
+//     virtual host header is needed.
+const SERVER_HTTP = process.env.BACKEND_URL ?? "http://15.235.165.81";
+const TRAEFIK_HOST = process.env.BACKEND_URL
+  ? null
+  : "toko-kopi-jaya-api.local";
 const API_PREFIX = "/api/v1";
 
 const agent = new Agent();
@@ -24,9 +31,10 @@ async function handler(
     : `${API_PREFIX}/${pathStr}`;
   const url = `${SERVER_HTTP}${backendPath}${req.nextUrl.search}`;
 
-  const headers: Record<string, string> = {
-    host: TRAEFIK_HOST,
-  };
+  const headers: Record<string, string> = {};
+  if (TRAEFIK_HOST) {
+    headers.host = TRAEFIK_HOST;
+  }
   const auth = req.headers.get("authorization");
   if (auth) headers["authorization"] = auth;
   const ct = req.headers.get("content-type");
