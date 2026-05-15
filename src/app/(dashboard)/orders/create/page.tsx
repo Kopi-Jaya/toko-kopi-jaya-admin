@@ -226,7 +226,6 @@ export default function CreateOrderPage() {
                   <Select
                     value={outletId}
                     onValueChange={(v) => setOutletId(v || "")}
-                    items={outlets.map((o) => ({ value: String(o.outlet_id), label: o.name }))}
                   >
                     <SelectTrigger><SelectValue placeholder="Select outlet" /></SelectTrigger>
                     <SelectContent>

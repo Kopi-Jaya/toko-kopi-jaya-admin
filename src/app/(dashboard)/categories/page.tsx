@@ -109,6 +109,16 @@ export default function CategoriesPage() {
         <div className="space-y-3">
           <div><Label>Name</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></div>
           <div><Label>Description</Label><Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2} /></div>
+          <div className="flex items-center gap-2 pt-1">
+            <input
+              type="checkbox"
+              id="cat_is_active"
+              checked={form.is_active}
+              onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
+              className="h-4 w-4 rounded border-gray-300"
+            />
+            <Label htmlFor="cat_is_active">Active</Label>
+          </div>
         </div>
       </CrudDialog>
     </div>

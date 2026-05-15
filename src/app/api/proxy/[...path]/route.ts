@@ -12,12 +12,19 @@ import { Agent, request as undiciRequest } from "undici";
 //     The container is reachable directly on the swarm network, so no
 //     virtual host header is needed.
 const SERVER_HTTP = process.env.BACKEND_URL ?? "http://15.235.165.81";
-const TRAEFIK_HOST = process.env.BACKEND_URL
-  ? null
-  : "toko-kopi-jaya-api.local";
+// BACKEND_HOST: explicit virtual-host for Traefik routing (set in .env.local for local dev).
+// When deploying on Dokploy, BACKEND_URL is the internal Docker hostname so no Host header needed.
+const TRAEFIK_HOST = process.env.BACKEND_HOST ?? null;
 const API_PREFIX = "/api/v1";
 
-const agent = new Agent();
+// When hitting the raw server IP over HTTPS, the TLS cert is issued for the
+// domain name, not the IP — so we must disable cert verification and set the
+// correct SNI so Traefik can route to the right virtual host.
+const agent = new Agent(
+  process.env.BACKEND_HOST
+    ? { connect: { rejectUnauthorized: false, servername: process.env.BACKEND_HOST } }
+    : {}
+);
 
 async function handler(
   req: NextRequest,

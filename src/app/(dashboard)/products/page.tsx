@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { useApiList } from "@/hooks/use-api";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
+import Image from "next/image";
 import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
 import { DeleteConfirmDialog, type DeleteLink } from "@/components/delete-confirm-dialog";
 import { toProxyImageUrl } from "@/lib/image-url";
@@ -171,7 +172,7 @@ export default function ProductsPage() {
       render: (p) => (
         <div className="flex items-center gap-3">
           {p.img_url ? (
-            <img src={toProxyImageUrl(p.img_url) ?? p.img_url} alt={p.name} className="h-10 w-10 rounded-lg object-cover" />
+            <Image src={toProxyImageUrl(p.img_url) ?? p.img_url!} alt={p.name} className="h-10 w-10 rounded-lg object-cover" width={40} height={40} unoptimized />
           ) : (
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-kj-50 text-kj-700 text-xs font-medium">
               {p.name.charAt(0)}
@@ -362,6 +363,16 @@ export default function ProductsPage() {
           <div>
             <Label>Description</Label>
             <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2} />
+          </div>
+          <div className="flex items-center gap-2 pt-1">
+            <input
+              type="checkbox"
+              id="is_available"
+              checked={form.is_available}
+              onChange={(e) => setForm({ ...form, is_available: e.target.checked })}
+              className="h-4 w-4 rounded border-gray-300"
+            />
+            <Label htmlFor="is_available">Available for ordering</Label>
           </div>
         </div>
       </CrudDialog>

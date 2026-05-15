@@ -14,19 +14,19 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push("/login");
+      router.replace("/login");
     }
   }, [user, loading, router]);
 
-  if (loading) {
+  // Block render until auth state is resolved, then redirect if no user.
+  // Never render dashboard content without a confirmed user.
+  if (loading || !user) {
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>
     );
   }
-
-  if (!user) return null;
 
   return (
     <SidebarProvider>

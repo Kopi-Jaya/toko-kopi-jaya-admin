@@ -104,6 +104,16 @@ export default function ServiceChargesPage() {
             </div>
             <div><Label>Value</Label><Input type="number" min="0" step="any" value={form.value} onChange={(e) => setForm({ ...form, value: e.target.value })} required /></div>
           </div>
+          <div className="flex items-center gap-2 pt-1">
+            <input
+              type="checkbox"
+              id="sc_is_active"
+              checked={form.is_active}
+              onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
+              className="h-4 w-4 rounded border-gray-300"
+            />
+            <Label htmlFor="sc_is_active">Active</Label>
+          </div>
         </div>
       </CrudDialog>
     </div>

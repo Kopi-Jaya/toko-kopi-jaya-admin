@@ -179,7 +179,6 @@ export default function RewardsPage() {
             <Select
               value={form.product_id}
               onValueChange={(v) => setForm({ ...form, product_id: v || "" })}
-              items={products.map((p) => ({ value: String(p.product_id), label: p.name }))}
             >
               <SelectTrigger><SelectValue placeholder="Select product" /></SelectTrigger>
               <SelectContent>

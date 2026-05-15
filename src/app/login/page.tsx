@@ -1,17 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
+import { useRouter } from "next/navigation";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 function LoginForm() {
-  const { login } = useAuth();
+  const { login, user, loading: authLoading } = useAuth();
+  const router = useRouter();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
+
+  useEffect(() => {
+    if (!authLoading && user) router.replace("/");
+  }, [authLoading, user, router]);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -42,9 +49,7 @@ function LoginForm() {
         <CardContent className="p-8">
           {/* Logo */}
           <div className="mb-8 flex flex-col items-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-kj-700 text-2xl font-bold text-white shadow-lg">
-              KJ
-            </div>
+            <Image src="/logo.png" alt="Toko Kopi Jaya" width={64} height={64} className="rounded-xl shadow-lg" />
             <h1 className="mt-4 text-xl font-semibold text-foreground">
               Welcome back!
             </h1>

@@ -19,6 +19,7 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   title: "Toko Kopi Jaya — Admin Dashboard",
   description: "Admin dashboard for Toko Kopi Jaya CRM and Ordering System",
+  icons: { icon: "/logo.png" },
 };
 
 export default function RootLayout({

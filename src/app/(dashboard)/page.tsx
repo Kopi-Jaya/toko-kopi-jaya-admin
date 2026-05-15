@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/page-header";
 import { api } from "@/lib/api";
+import { useScope } from "@/lib/scope";
 import { toast } from "sonner";
 import {
   ShoppingCart,
@@ -60,15 +61,19 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const { currentOutletId } = useScope();
 
   const fetchData = useCallback(() => {
     setLoading(true);
     const dateParams = new URLSearchParams();
     if (dateFrom) dateParams.set("date_from", dateFrom);
     if (dateTo) dateParams.set("date_to", dateTo);
+    if (currentOutletId !== null) dateParams.set("outlet_id", String(currentOutletId));
     const qs = dateParams.toString();
     const suffix = qs ? `?${qs}` : "";
-    const limitSuffix = qs ? `?limit=10&${qs}` : "?limit=10";
+    const limitParams = new URLSearchParams(dateParams);
+    limitParams.set("limit", "10");
+    const limitSuffix = `?${limitParams.toString()}`;
 
     Promise.all([
       api.get<SalesBySource[]>(`/analytics/sales-by-source${suffix}`),
@@ -97,7 +102,7 @@ export default function DashboardPage() {
         toast.error("Failed to load analytics data");
       })
       .finally(() => setLoading(false));
-  }, [dateFrom, dateTo]);
+  }, [dateFrom, dateTo, currentOutletId]);
 
   useEffect(() => {
     // Microtask defers the chained setState calls inside fetchData out of

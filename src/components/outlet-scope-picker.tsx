@@ -44,9 +44,13 @@ export function OutletScopePicker() {
         }}
       >
         <SelectTrigger className="w-[220px]">
-          <SelectValue
-            placeholder={outletsLoading ? "Loading outlets…" : "All outlets"}
-          />
+          <span className="flex-1 truncate text-left text-sm">
+            {outletsLoading
+              ? "Loading outlets…"
+              : currentOutletId === null
+                ? "All outlets (super-admin)"
+                : (availableOutlets.find((o) => o.outlet_id === currentOutletId)?.name ?? "Select outlet")}
+          </span>
         </SelectTrigger>
         <SelectContent>
           <SelectItem value={ALL_VALUE}>All outlets (super-admin)</SelectItem>

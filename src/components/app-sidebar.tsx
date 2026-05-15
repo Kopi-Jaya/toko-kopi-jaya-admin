@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
@@ -121,7 +122,7 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
         <Link href="/" className="flex items-center gap-3 group-data-[collapsible=icon]:justify-center">
-          <img src="/logo.png" alt="Kopi Jaya" className="h-9 w-9 shrink-0 rounded-lg object-cover" />
+          <Image src="/logo.png" alt="Kopi Jaya" className="h-9 w-9 shrink-0 rounded-lg object-cover" width={36} height={36} />
           <div className="flex flex-col group-data-[collapsible=icon]:hidden">
             <span className="text-sm font-semibold text-white">Toko Kopi Jaya</span>
             <span className="text-xs text-white/60">Admin Dashboard</span>

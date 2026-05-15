@@ -119,6 +119,16 @@ export default function ModifiersPage() {
             </Select>
           </div>
           <div><Label>Extra Price (Rp)</Label><Input type="number" min="0" value={form.extra_price} onChange={(e) => setForm({ ...form, extra_price: e.target.value })} /></div>
+          <div className="flex items-center gap-2 pt-1">
+            <input
+              type="checkbox"
+              id="mod_is_active"
+              checked={form.is_active}
+              onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
+              className="h-4 w-4 rounded border-gray-300"
+            />
+            <Label htmlFor="mod_is_active">Active</Label>
+          </div>
         </div>
       </CrudDialog>
     </div>

@@ -46,22 +46,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    // Defer the state writes off the effect commit phase so React doesn't
-    // re-render mid-commit. Equivalent functionally; satisfies the
-    // react-hooks/set-state-in-effect lint that's now an error in this stack.
-    const stored = localStorage.getItem("user");
-    const token = localStorage.getItem("access_token");
-    queueMicrotask(() => {
-      if (stored && token) {
-        try {
-          setUser(JSON.parse(stored));
-        } catch {
-          localStorage.clear();
-        }
+    async function validateSession() {
+      const stored = localStorage.getItem("user");
+      const refreshToken = localStorage.getItem("refresh_token");
+
+      if (!stored || !refreshToken) {
+        setLoading(false);
+        return;
       }
-      setLoading(false);
-    });
-  }, []);
+
+      // Verify the session is still alive by refreshing the token.
+      // If the refresh token is expired/invalid, clear everything and redirect.
+      try {
+        const res = await fetch("/api/proxy/auth/refresh", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ refresh_token: refreshToken }),
+        });
+
+        if (!res.ok) throw new Error("refresh failed");
+
+        const json = await res.json();
+        if (json?.data?.access_token) {
+          localStorage.setItem("access_token", json.data.access_token);
+        }
+
+        setUser(JSON.parse(stored));
+      } catch {
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        localStorage.removeItem("user");
+        router.replace("/login");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    validateSession();
+  }, [router]);
 
   const login = useCallback(
     async (identifier: string, password: string) => {
