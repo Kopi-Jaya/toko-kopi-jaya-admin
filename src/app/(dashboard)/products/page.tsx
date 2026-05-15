@@ -17,6 +17,7 @@ import Image from "next/image";
 import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
 import { DeleteConfirmDialog, type DeleteLink } from "@/components/delete-confirm-dialog";
 import { toProxyImageUrl } from "@/lib/image-url";
+import { RupiahInput } from "@/components/rupiah-input";
 
 interface Product {
   product_id: number;
@@ -292,8 +293,8 @@ export default function ProductsPage() {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label>Price (Rp)</Label>
-              <Input type="number" min="0" value={form.base_price} onChange={(e) => setForm({ ...form, base_price: e.target.value })} required />
+              <Label>Price</Label>
+              <RupiahInput value={form.base_price} onChange={(v) => setForm({ ...form, base_price: v })} required />
             </div>
             <div>
               <Label>Earning Points</Label>

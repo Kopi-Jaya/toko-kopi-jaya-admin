@@ -152,20 +152,22 @@ export default function OrdersPage() {
       header: "Actions",
       render: (o) => {
         const next = STATUS_TRANSITIONS[o.status];
-        if (!next?.length) return null;
+        if (!next?.length) return <span className="text-xs text-muted-foreground">—</span>;
         return (
-          <div className="flex gap-1">
-            {next.map((s) => (
-              <Button
-                key={s}
-                size="sm"
-                variant={s === "cancelled" ? "destructive" : "outline"}
-                onClick={(e) => { e.stopPropagation(); updateStatus(o.order_id, s); }}
-                className="text-xs h-7"
-              >
-                {s === "cancelled" ? "Cancel" : s.replace(/_/g, " ")}
-              </Button>
-            ))}
+          <div onClick={(e) => e.stopPropagation()}>
+            <select
+              className="rounded border border-input bg-background px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
+              defaultValue=""
+              onChange={(e) => {
+                if (e.target.value) updateStatus(o.order_id, e.target.value);
+                e.target.value = "";
+              }}
+            >
+              <option value="" disabled>Move to…</option>
+              {next.map((s) => (
+                <option key={s} value={s}>{s === "cancelled" ? "Cancel" : s.replace(/_/g, " ")}</option>
+              ))}
+            </select>
           </div>
         );
       },

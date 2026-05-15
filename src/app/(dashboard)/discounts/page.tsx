@@ -14,6 +14,7 @@ import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { DeleteConfirmDialog, type DeleteLink } from "@/components/delete-confirm-dialog";
+import { RupiahInput } from "@/components/rupiah-input";
 
 interface Discount {
   discount_id: number;
@@ -144,7 +145,7 @@ export default function DiscountsPage() {
               <Select
                 value={form.type}
                 onValueChange={(v) => {
-                  if (v === "percentage" || v === "nominal") setForm({ ...form, type: v });
+                  if (v === "percentage" || v === "nominal") setForm({ ...form, type: v, max_discount: v === "nominal" ? "" : form.max_discount });
                 }}
               >
                 <SelectTrigger><SelectValue /></SelectTrigger>
@@ -154,8 +155,14 @@ export default function DiscountsPage() {
             <div><Label>Value</Label><Input type="number" min="0" value={form.value} onChange={(e) => setForm({ ...form, value: e.target.value })} required /></div>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div><Label>Min Purchase (Rp)</Label><Input type="number" min="0" value={form.min_purchase} onChange={(e) => setForm({ ...form, min_purchase: e.target.value })} /></div>
-            <div><Label>Max Discount (Rp)</Label><Input type="number" min="0" value={form.max_discount} onChange={(e) => setForm({ ...form, max_discount: e.target.value })} /></div>
+            <div><Label>Min Purchase (Rp)</Label><RupiahInput value={form.min_purchase} onChange={(v) => setForm({ ...form, min_purchase: v })} /></div>
+            {form.type === "percentage" && (
+              <div>
+                <Label>Max Discount (Rp)</Label>
+                <RupiahInput value={form.max_discount} onChange={(v) => setForm({ ...form, max_discount: v })} placeholder="No cap" />
+                <p className="mt-1 text-xs text-muted-foreground">Caps the rupiah ceiling for this % promo</p>
+              </div>
+            )}
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div><Label>Usage Limit</Label><Input type="number" min="0" value={form.usage_limit} onChange={(e) => setForm({ ...form, usage_limit: e.target.value })} /></div>

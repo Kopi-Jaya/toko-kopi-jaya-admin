@@ -14,6 +14,7 @@ import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
+import { RupiahInput } from "@/components/rupiah-input";
 
 interface Tax {
   tax_id: number;
@@ -61,7 +62,7 @@ export default function TaxPage() {
   const columns: Column<Tax>[] = [
     { key: "name", header: "Name", render: (t) => <span className="font-medium">{t.name}</span> },
     { key: "type", header: "Type", render: (t) => <Badge variant="outline">{t.type}</Badge> },
-    { key: "value", header: "Value", className: "text-right", render: (t) => t.type === "percentage" ? `${t.value}%` : `Rp ${Number(t.value).toLocaleString()}` },
+    { key: "value", header: "Value", className: "text-right", render: (t) => t.type === "percentage" ? `${Number(t.value)}%` : `Rp ${Number(t.value).toLocaleString("id-ID")}` },
     { key: "is_active", header: "Status", render: (t) => <Badge variant="outline" className={t.is_active ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}>{t.is_active ? "Active" : "Inactive"}</Badge> },
     {
       key: "actions", header: "", className: "text-right",
@@ -102,7 +103,12 @@ export default function TaxPage() {
                 <SelectContent><SelectItem value="percentage">Percentage</SelectItem><SelectItem value="nominal">Nominal</SelectItem></SelectContent>
               </Select>
             </div>
-            <div><Label>Value</Label><Input type="number" min="0" step="any" value={form.value} onChange={(e) => setForm({ ...form, value: e.target.value })} required /></div>
+            <div>
+              <Label>{form.type === "percentage" ? "Value (%)" : "Value (Rp)"}</Label>
+              {form.type === "nominal"
+                ? <RupiahInput value={form.value} onChange={(v) => setForm({ ...form, value: v })} required />
+                : <Input type="number" min="0" max="100" step="any" value={form.value} onChange={(e) => setForm({ ...form, value: e.target.value })} required />}
+            </div>
           </div>
           <div className="flex items-center gap-2 pt-1">
             <input

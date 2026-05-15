@@ -227,7 +227,11 @@ export default function CreateOrderPage() {
                     value={outletId}
                     onValueChange={(v) => setOutletId(v || "")}
                   >
-                    <SelectTrigger><SelectValue placeholder="Select outlet" /></SelectTrigger>
+                    <SelectTrigger>
+                      <span className="flex-1 truncate text-left text-sm">
+                        {outletId ? (outlets.find((o) => String(o.outlet_id) === outletId)?.name ?? outletId) : "Select outlet"}
+                      </span>
+                    </SelectTrigger>
                     <SelectContent>
                       {outlets.map((o) => (
                         <SelectItem key={o.outlet_id} value={String(o.outlet_id)}>{o.name}</SelectItem>
