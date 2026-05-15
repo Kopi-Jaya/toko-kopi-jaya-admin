@@ -73,6 +73,8 @@ export default function ProductsPage() {
   const { currentOutletId, availableOutlets, canSwitchOutlet } = useScope();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
+  const [sortKey, setSortKey] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<ProductRow | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -167,6 +169,26 @@ export default function ProductsPage() {
       }));
 
   const loading = currentOutletId !== null ? false : globalLoading;
+
+  const handleSort = (key: string) => {
+    if (sortKey === key) setSortDir((d) => d === "asc" ? "desc" : "asc");
+    else { setSortKey(key); setSortDir("asc"); }
+  };
+
+  const sortedRows = sortKey
+    ? [...rows].sort((a, b) => {
+        let av: unknown, bv: unknown;
+        if (sortKey === "name") { av = a.name.toLowerCase(); bv = b.name.toLowerCase(); }
+        else if (sortKey === "display_price") { av = a.display_price; bv = b.display_price; }
+        else if (sortKey === "earning_points") { av = a.earning_points; bv = b.earning_points; }
+        else if (sortKey === "is_available") { av = a.is_available ? 1 : 0; bv = b.is_available ? 1 : 0; }
+        else if (sortKey === "outlets") { av = (a.outlet_names ?? []).join(",").toLowerCase(); bv = (b.outlet_names ?? []).join(",").toLowerCase(); }
+        else { av = 0; bv = 0; }
+        if (av === bv) return 0;
+        const cmp = av! < bv! ? -1 : 1;
+        return sortDir === "asc" ? cmp : -cmp;
+      })
+    : rows;
 
   const openCreate = async () => {
     setDialogLoading(true);
@@ -291,6 +313,7 @@ export default function ProductsPage() {
     {
       key: "name",
       header: "Product",
+      sortable: true,
       render: (p) => (
         <div className="flex items-center gap-3">
           {p.img_url ? (
@@ -310,6 +333,7 @@ export default function ProductsPage() {
     {
       key: "display_price",
       header: "Price",
+      sortable: true,
       className: "text-right",
       render: (p) => (
         <div className="text-right">
@@ -323,12 +347,14 @@ export default function ProductsPage() {
     {
       key: "earning_points",
       header: "Points",
+      sortable: true,
       className: "text-center",
       render: (p) => <span className="text-gold-500 font-medium">{p.earning_points} pts</span>,
     },
     {
       key: "is_available",
       header: "Status",
+      sortable: true,
       render: (p) => (
         <Badge variant="outline" className={p.is_available ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}>
           {p.is_available ? "Available" : "Unavailable"}
@@ -338,6 +364,7 @@ export default function ProductsPage() {
     ...(isOutletMode ? [] : [{
       key: "outlets" as keyof ProductRow,
       header: "Outlets",
+      sortable: true,
       render: (p: ProductRow) => {
         const names = p.outlet_names ?? [];
         if (!outletAssignmentsLoaded) return <span className="text-muted-foreground text-xs">—</span>;
@@ -391,7 +418,16 @@ export default function ProductsPage() {
         />
       </div>
 
-      <DataTable columns={columns} data={rows} loading={loading} meta={isOutletMode ? undefined : meta} onPageChange={setPage} />
+      <DataTable
+        columns={columns}
+        data={sortedRows}
+        loading={loading}
+        meta={isOutletMode ? undefined : meta}
+        sortKey={sortKey}
+        sortDir={sortDir}
+        onSort={handleSort}
+        onPageChange={setPage}
+      />
 
       <DeleteConfirmDialog
         open={!!deleteTarget}

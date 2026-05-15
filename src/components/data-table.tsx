@@ -10,12 +10,13 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 
 export interface Column<T> {
   key: string;
   header: string;
   className?: string;
+  sortable?: boolean;
   render?: (item: T) => React.ReactNode;
 }
 
@@ -29,6 +30,9 @@ interface DataTableProps<T> {
     total_items: number;
     total_pages: number;
   };
+  sortKey?: string | null;
+  sortDir?: "asc" | "desc";
+  onSort?: (key: string) => void;
   onPageChange?: (page: number) => void;
   onRowClick?: (item: T) => void;
   emptyMessage?: string;
@@ -39,6 +43,9 @@ export function DataTable<T>({
   data,
   loading,
   meta,
+  sortKey,
+  sortDir,
+  onSort,
   onPageChange,
   onRowClick,
   emptyMessage = "No data found.",
@@ -61,7 +68,19 @@ export function DataTable<T>({
             <TableRow>
               {columns.map((col) => (
                 <TableHead key={col.key} className={col.className}>
-                  {col.header}
+                  {col.sortable && onSort ? (
+                    <button
+                      className="flex items-center gap-1 hover:text-foreground"
+                      onClick={() => onSort(col.key)}
+                    >
+                      {col.header}
+                      {sortKey === col.key ? (
+                        sortDir === "asc" ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />
+                      ) : (
+                        <ChevronsUpDown className="h-3 w-3 opacity-40" />
+                      )}
+                    </button>
+                  ) : col.header}
                 </TableHead>
               ))}
             </TableRow>
