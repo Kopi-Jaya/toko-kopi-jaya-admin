@@ -14,6 +14,7 @@ import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, MapPin, Loader2 } from "lucide-react";
 import { DeleteConfirmDialog, type DeleteLink } from "@/components/delete-confirm-dialog";
+import { MapPicker } from "@/components/map-picker";
 
 interface Outlet {
   outlet_id: number;
@@ -40,7 +41,11 @@ export default function OutletsPage() {
 
   const { data, loading, refetch } = useApiList<Outlet>("/outlets");
 
-  const openCreate = () => { setEditing(null); setForm({ name: "", address: "", phone: "", latitude: "", longitude: "", status: "active" }); setDialogOpen(true); };
+  const openCreate = () => {
+    setEditing(null);
+    setForm({ name: "", address: "", phone: "", latitude: "", longitude: "", status: "active" });
+    setDialogOpen(true);
+  };
   const openEdit = (o: Outlet) => {
     setEditing(o);
     setForm({ name: o.name, address: o.address || "", phone: o.phone || "", latitude: o.latitude ? String(o.latitude) : "", longitude: o.longitude ? String(o.longitude) : "", status: o.status });
@@ -85,6 +90,10 @@ export default function OutletsPage() {
     )},
     { key: "address", header: "Address", render: (o) => o.address || "—" },
     { key: "phone", header: "Phone", render: (o) => o.phone || "—" },
+    { key: "coords", header: "Coordinates", render: (o) => o.latitude && o.longitude
+      ? <span className="text-xs text-muted-foreground">{Number(o.latitude).toFixed(4)}, {Number(o.longitude).toFixed(4)}</span>
+      : <span className="text-xs text-muted-foreground">—</span>
+    },
     { key: "status", header: "Status", render: (o) => <Badge variant="outline" className={STATUS_COLORS[o.status]}>{o.status}</Badge> },
     {
       key: "actions", header: "", className: "text-right",
@@ -128,12 +137,7 @@ export default function OutletsPage() {
       <CrudDialog open={dialogOpen} onOpenChange={setDialogOpen} title={editing ? "Edit Outlet" : "Add Outlet"} onSubmit={handleSubmit}>
         <div className="space-y-3">
           <div><Label>Name</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></div>
-          <div><Label>Address</Label><Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div>
           <div><Label>Phone</Label><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
-          <div className="grid grid-cols-2 gap-3">
-            <div><Label>Latitude</Label><Input type="number" step="any" value={form.latitude} onChange={(e) => setForm({ ...form, latitude: e.target.value })} /></div>
-            <div><Label>Longitude</Label><Input type="number" step="any" value={form.longitude} onChange={(e) => setForm({ ...form, longitude: e.target.value })} /></div>
-          </div>
           <div><Label>Status</Label>
             <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v || "" })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
@@ -143,6 +147,23 @@ export default function OutletsPage() {
                 <SelectItem value="maintenance">Maintenance</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+          <div>
+            <Label>Location</Label>
+            <p className="text-xs text-muted-foreground mb-2">Search or click on the map to set the outlet location</p>
+            <MapPicker
+              lat={form.latitude}
+              lng={form.longitude}
+              onChange={(lat, lng, address) => setForm((f) => ({
+                ...f,
+                latitude: lat,
+                longitude: lng,
+                address: address ?? f.address,
+              }))}
+            />
+          </div>
+          <div><Label>Address <span className="text-muted-foreground text-xs">(auto-filled from map, or type manually)</span></Label>
+            <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
           </div>
         </div>
       </CrudDialog>
