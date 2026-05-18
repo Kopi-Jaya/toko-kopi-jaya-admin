@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { PageHeader } from "@/components/page-header";
 import { DataTable, type Column } from "@/components/data-table";
 import { CrudDialog } from "@/components/crud-dialog";
@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { useApiList } from "@/hooks/use-api";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, ChevronDown, X } from "lucide-react";
 import { DeleteConfirmDialog, type DeleteLink } from "@/components/delete-confirm-dialog";
 
 interface Modifier {
@@ -27,6 +27,84 @@ interface Modifier {
 
 function formatRupiah(n: number) {
   return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(n);
+}
+
+function GroupCombobox({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: string[] }) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState(value);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => { setQuery(value); }, [value]);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setOpen(false);
+        onChange(query.trim());
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [query, onChange]);
+
+  const filtered = options.filter((g) => g.toLowerCase().includes(query.toLowerCase()));
+  const showNew = query.trim() && !options.some((g) => g.toLowerCase() === query.trim().toLowerCase());
+
+  return (
+    <div ref={wrapperRef} className="relative">
+      <div className="relative flex items-center">
+        <Input
+          value={query}
+          onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
+          onFocus={() => setOpen(true)}
+          placeholder={options.length ? "Pick a group or type new…" : "e.g. Ukuran, Susu"}
+          className="pr-8"
+        />
+        {query ? (
+          <button
+            type="button"
+            onClick={() => { setQuery(""); onChange(""); setOpen(true); }}
+            className="absolute right-2 text-muted-foreground hover:text-foreground"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setOpen((o) => !o)}
+            className="absolute right-2 text-muted-foreground"
+          >
+            <ChevronDown className="h-3.5 w-3.5" />
+          </button>
+        )}
+      </div>
+
+      {open && (filtered.length > 0 || showNew) && (
+        <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover shadow-md">
+          {filtered.map((g) => (
+            <button
+              key={g}
+              type="button"
+              onMouseDown={(e) => { e.preventDefault(); onChange(g); setQuery(g); setOpen(false); }}
+              className="flex w-full items-center px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground text-left"
+            >
+              {g}
+            </button>
+          ))}
+          {showNew && (
+            <button
+              type="button"
+              onMouseDown={(e) => { e.preventDefault(); const v = query.trim(); onChange(v); setQuery(v); setOpen(false); }}
+              className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground border-t text-left"
+            >
+              <Plus className="h-3.5 w-3.5 text-muted-foreground" />
+              <span>Create <span className="font-medium">"{query.trim()}"</span></span>
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function ModifiersPage() {
@@ -69,7 +147,7 @@ export default function ModifiersPage() {
 
   const columns: Column<Modifier>[] = [
     { key: "name", header: "Name", render: (m) => <span className="font-medium">{m.name}</span> },
-    { key: "group_name", header: "Group", render: (m) => m.group_name ? <span className="text-xs text-muted-foreground">{m.group_name}</span> : <span className="text-muted-foreground">—</span> },
+    { key: "group_name", header: "Group", render: (m) => m.group_name ? <Badge variant="outline" className="text-xs font-normal">{m.group_name}</Badge> : <span className="text-muted-foreground">—</span> },
     { key: "selection_type", header: "Selection", render: (m) => <Badge variant="outline" className="text-xs">{m.selection_type ?? "single"}</Badge> },
     { key: "type", header: "Type", render: (m) => <Badge variant="outline">{m.type}</Badge> },
     { key: "extra_price", header: "Price", className: "text-right", render: (m) => formatRupiah(Number(m.extra_price)) },
@@ -114,16 +192,12 @@ export default function ModifiersPage() {
         <div className="space-y-3">
           <div><Label>Name</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></div>
           <div>
-            <Label>Group Name <span className="text-muted-foreground text-xs">(optional — pick existing or type new)</span></Label>
-            <Input
-              list="mod-group-suggestions"
+            <Label>Group Name <span className="text-muted-foreground text-xs">(optional)</span></Label>
+            <GroupCombobox
               value={form.group_name}
-              onChange={(e) => setForm({ ...form, group_name: e.target.value })}
-              placeholder={existingGroups.length ? "Pick a group or type new…" : "e.g. Ukuran, Susu"}
+              onChange={(v) => setForm({ ...form, group_name: v })}
+              options={existingGroups}
             />
-            <datalist id="mod-group-suggestions">
-              {existingGroups.map((g) => <option key={g} value={g} />)}
-            </datalist>
           </div>
           <div><Label>Selection Type</Label>
             <Select value={form.selection_type} onValueChange={(v) => { if (v === "single" || v === "multiple") setForm({ ...form, selection_type: v }); }}>
@@ -135,12 +209,7 @@ export default function ModifiersPage() {
             </Select>
           </div>
           <div><Label>Type</Label>
-            <Select
-              value={form.type}
-              onValueChange={(v) => {
-                if (v === "add" || v === "remove") setForm({ ...form, type: v });
-              }}
-            >
+            <Select value={form.type} onValueChange={(v) => { if (v === "add" || v === "remove") setForm({ ...form, type: v }); }}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent><SelectItem value="add">Add</SelectItem><SelectItem value="remove">Remove</SelectItem></SelectContent>
             </Select>
