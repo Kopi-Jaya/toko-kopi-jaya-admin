@@ -38,6 +38,8 @@ export default function ModifiersPage() {
 
   const { data, loading, refetch } = useApiList<Modifier>("/modifiers");
 
+  const existingGroups = [...new Set(data.map((m) => m.group_name).filter(Boolean) as string[])].sort();
+
   const openCreate = () => { setEditing(null); setForm({ name: "", group_name: "", selection_type: "single", type: "add", extra_price: "0", is_active: true }); setDialogOpen(true); };
   const openEdit = (m: Modifier) => { setEditing(m); setForm({ name: m.name, group_name: m.group_name ?? "", selection_type: m.selection_type ?? "single", type: m.type, extra_price: String(m.extra_price), is_active: m.is_active }); setDialogOpen(true); };
 
@@ -111,7 +113,18 @@ export default function ModifiersPage() {
       <CrudDialog open={dialogOpen} onOpenChange={setDialogOpen} title={editing ? "Edit Modifier" : "Add Modifier"} onSubmit={handleSubmit}>
         <div className="space-y-3">
           <div><Label>Name</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></div>
-          <div><Label>Group Name <span className="text-muted-foreground text-xs">(optional — groups related modifiers, e.g. "Ukuran")</span></Label><Input value={form.group_name} onChange={(e) => setForm({ ...form, group_name: e.target.value })} placeholder="e.g. Ukuran, Susu" /></div>
+          <div>
+            <Label>Group Name <span className="text-muted-foreground text-xs">(optional — pick existing or type new)</span></Label>
+            <Input
+              list="mod-group-suggestions"
+              value={form.group_name}
+              onChange={(e) => setForm({ ...form, group_name: e.target.value })}
+              placeholder={existingGroups.length ? "Pick a group or type new…" : "e.g. Ukuran, Susu"}
+            />
+            <datalist id="mod-group-suggestions">
+              {existingGroups.map((g) => <option key={g} value={g} />)}
+            </datalist>
+          </div>
           <div><Label>Selection Type</Label>
             <Select value={form.selection_type} onValueChange={(v) => { if (v === "single" || v === "multiple") setForm({ ...form, selection_type: v }); }}>
               <SelectTrigger><SelectValue /></SelectTrigger>
