@@ -18,6 +18,8 @@ import { DeleteConfirmDialog, type DeleteLink } from "@/components/delete-confir
 interface Modifier {
   modifier_id: number;
   name: string;
+  group_name: string | null;
+  selection_type: "single" | "multiple";
   type: "add" | "remove";
   extra_price: number;
   is_active: boolean;
@@ -30,18 +32,18 @@ function formatRupiah(n: number) {
 export default function ModifiersPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Modifier | null>(null);
-  const [form, setForm] = useState<{ name: string; type: "add" | "remove"; extra_price: string; is_active: boolean }>({ name: "", type: "add", extra_price: "0", is_active: true });
+  const [form, setForm] = useState<{ name: string; group_name: string; selection_type: "single" | "multiple"; type: "add" | "remove"; extra_price: string; is_active: boolean }>({ name: "", group_name: "", selection_type: "single", type: "add", extra_price: "0", is_active: true });
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; label: string; links?: DeleteLink[] } | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   const { data, loading, refetch } = useApiList<Modifier>("/modifiers");
 
-  const openCreate = () => { setEditing(null); setForm({ name: "", type: "add", extra_price: "0", is_active: true }); setDialogOpen(true); };
-  const openEdit = (m: Modifier) => { setEditing(m); setForm({ name: m.name, type: m.type, extra_price: String(m.extra_price), is_active: m.is_active }); setDialogOpen(true); };
+  const openCreate = () => { setEditing(null); setForm({ name: "", group_name: "", selection_type: "single", type: "add", extra_price: "0", is_active: true }); setDialogOpen(true); };
+  const openEdit = (m: Modifier) => { setEditing(m); setForm({ name: m.name, group_name: m.group_name ?? "", selection_type: m.selection_type ?? "single", type: m.type, extra_price: String(m.extra_price), is_active: m.is_active }); setDialogOpen(true); };
 
   const handleSubmit = async () => {
     try {
-      const body = { name: form.name, type: form.type, extra_price: Number(form.extra_price), is_active: form.is_active };
+      const body = { name: form.name, group_name: form.group_name || null, selection_type: form.selection_type, type: form.type, extra_price: Number(form.extra_price), is_active: form.is_active };
       if (editing) { await api.patch(`/modifiers/${editing.modifier_id}`, body); toast.success("Modifier updated"); }
       else { await api.post("/modifiers", body); toast.success("Modifier created"); }
       refetch();
@@ -65,6 +67,8 @@ export default function ModifiersPage() {
 
   const columns: Column<Modifier>[] = [
     { key: "name", header: "Name", render: (m) => <span className="font-medium">{m.name}</span> },
+    { key: "group_name", header: "Group", render: (m) => m.group_name ? <span className="text-xs text-muted-foreground">{m.group_name}</span> : <span className="text-muted-foreground">—</span> },
+    { key: "selection_type", header: "Selection", render: (m) => <Badge variant="outline" className="text-xs">{m.selection_type ?? "single"}</Badge> },
     { key: "type", header: "Type", render: (m) => <Badge variant="outline">{m.type}</Badge> },
     { key: "extra_price", header: "Price", className: "text-right", render: (m) => formatRupiah(Number(m.extra_price)) },
     { key: "is_active", header: "Status", render: (m) => <Badge variant="outline" className={m.is_active ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}>{m.is_active ? "Active" : "Inactive"}</Badge> },
@@ -107,6 +111,16 @@ export default function ModifiersPage() {
       <CrudDialog open={dialogOpen} onOpenChange={setDialogOpen} title={editing ? "Edit Modifier" : "Add Modifier"} onSubmit={handleSubmit}>
         <div className="space-y-3">
           <div><Label>Name</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></div>
+          <div><Label>Group Name <span className="text-muted-foreground text-xs">(optional — groups related modifiers, e.g. "Ukuran")</span></Label><Input value={form.group_name} onChange={(e) => setForm({ ...form, group_name: e.target.value })} placeholder="e.g. Ukuran, Susu" /></div>
+          <div><Label>Selection Type</Label>
+            <Select value={form.selection_type} onValueChange={(v) => { if (v === "single" || v === "multiple") setForm({ ...form, selection_type: v }); }}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="single">Single (pick one from group)</SelectItem>
+                <SelectItem value="multiple">Multiple (pick many)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div><Label>Type</Label>
             <Select
               value={form.type}

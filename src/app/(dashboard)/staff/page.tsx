@@ -19,6 +19,7 @@ import { DeleteConfirmDialog, type DeleteLink } from "@/components/delete-confir
 interface Staff {
   staff_id: number;
   name: string;
+  phone: string | null;
   username: string;
   role: string;
   is_active: boolean;
@@ -39,7 +40,7 @@ export default function StaffPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Staff | null>(null);
   const [outlets, setOutlets] = useState<Outlet[]>([]);
-  const [form, setForm] = useState({ name: "", username: "", password: "", role: "cashier", outlet_id: "", is_active: true });
+  const [form, setForm] = useState({ name: "", phone: "", username: "", password: "", role: "cashier", outlet_id: "", is_active: true });
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; label: string; links?: DeleteLink[] } | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [dialogLoading, setDialogLoading] = useState(false);
@@ -61,7 +62,7 @@ export default function StaffPage() {
     try {
       await loadOutlets();
       setEditing(null);
-      setForm({ name: "", username: "", password: "", role: "cashier", outlet_id: "", is_active: true });
+      setForm({ name: "", phone: "", username: "", password: "", role: "cashier", outlet_id: "", is_active: true });
       setDialogOpen(true);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to load outlets");
@@ -75,7 +76,7 @@ export default function StaffPage() {
     try {
       await loadOutlets();
       setEditing(s);
-      setForm({ name: s.name, username: s.username, password: "", role: s.role, outlet_id: s.outlet?.outlet_id ? String(s.outlet.outlet_id) : "", is_active: s.is_active });
+      setForm({ name: s.name, phone: s.phone ?? "", username: s.username, password: "", role: s.role, outlet_id: s.outlet?.outlet_id ? String(s.outlet.outlet_id) : "", is_active: s.is_active });
       setDialogOpen(true);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to load outlets");
@@ -87,7 +88,7 @@ export default function StaffPage() {
   const handleSubmit = async () => {
     try {
       const body: Record<string, unknown> = {
-        name: form.name, username: form.username, role: form.role,
+        name: form.name, phone: form.phone || null, username: form.username, role: form.role,
         outlet_id: form.outlet_id ? Number(form.outlet_id) : undefined,
         is_active: form.is_active,
       };
@@ -164,6 +165,7 @@ export default function StaffPage() {
       <CrudDialog open={dialogOpen} onOpenChange={setDialogOpen} title={editing ? "Edit Staff" : "Add Staff"} onSubmit={handleSubmit}>
         <div className="space-y-3">
           <div><Label>Name</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></div>
+          <div><Label>Phone <span className="text-muted-foreground text-xs">(optional)</span></Label><Input type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+62..." maxLength={20} /></div>
           <div><Label>Username</Label><Input value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} required /></div>
           <div><Label>Password {editing ? "(leave blank to keep)" : ""}</Label><Input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required={!editing} minLength={8} /></div>
           <div><Label>Role</Label>

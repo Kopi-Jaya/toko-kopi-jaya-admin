@@ -50,6 +50,14 @@ interface Outlet {
   name: string;
 }
 
+interface ModifierOption {
+  modifier_id: number;
+  name: string;
+  group_name: string | null;
+  extra_price: number;
+  is_active: boolean;
+}
+
 interface ProductRow {
   product_id: number;
   name: string;
@@ -92,6 +100,9 @@ export default function ProductsPage() {
   const [dialogLoading, setDialogLoading] = useState(false);
   const [pendingImage, setPendingImage] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [allModifiers, setAllModifiers] = useState<ModifierOption[]>([]);
+  const [selectedModifierIds, setSelectedModifierIds] = useState<Set<number>>(new Set());
+  const [originalModifierIds, setOriginalModifierIds] = useState<Set<number>>(new Set());
 
   // Global products list (used when all outlets or when we need to build rows)
   const { data: globalProducts, meta, loading: globalLoading, refetch: refetchGlobal } = useApiList<Product>("/products", {
@@ -193,8 +204,14 @@ export default function ProductsPage() {
   const openCreate = async () => {
     setDialogLoading(true);
     try {
-      const res = await api.get<Category[]>("/categories");
-      setCategories(res.data);
+      const [catsRes, modsRes] = await Promise.all([
+        api.get<Category[]>("/categories"),
+        api.get<ModifierOption[]>("/modifiers"),
+      ]);
+      setCategories(catsRes.data);
+      setAllModifiers(modsRes.data.filter((m) => m.is_active !== false));
+      setSelectedModifierIds(new Set());
+      setOriginalModifierIds(new Set());
       setEditing(null);
       setForm({ name: "", category_id: "", base_price: "", earning_points: "0", description: "", img_url: "", is_available: true, price_override: "", form_outlet_id: "" });
       setPendingImage(null);
@@ -209,8 +226,16 @@ export default function ProductsPage() {
   const openEdit = async (row: ProductRow) => {
     setDialogLoading(true);
     try {
-      const res = await api.get<Category[]>("/categories");
-      setCategories(res.data);
+      const [catsRes, modsRes, prodModsRes] = await Promise.all([
+        api.get<Category[]>("/categories"),
+        api.get<ModifierOption[]>("/modifiers"),
+        api.get<{ modifier: ModifierOption }[]>(`/products/${row.product_id}/modifiers`),
+      ]);
+      setCategories(catsRes.data);
+      setAllModifiers(modsRes.data.filter((m) => m.is_active !== false));
+      const assignedIds = new Set(prodModsRes.data.map((pm) => pm.modifier.modifier_id));
+      setSelectedModifierIds(new Set(assignedIds));
+      setOriginalModifierIds(new Set(assignedIds));
       setEditing(row);
       setForm({
         name: row.name,
@@ -278,6 +303,16 @@ export default function ProductsPage() {
         } else {
           await api.post(`/outlets/${outletId}/products/${productId}`, overrideBody);
         }
+      }
+
+      // Sync product-modifier assignments
+      const toAdd = [...selectedModifierIds].filter((id) => !originalModifierIds.has(id));
+      const toRemove = [...originalModifierIds].filter((id) => !selectedModifierIds.has(id));
+      if (toAdd.length > 0 || toRemove.length > 0) {
+        await Promise.all([
+          ...toAdd.map((id) => api.post(`/products/${productId}/modifiers`, { modifier_id: id })),
+          ...toRemove.map((id) => api.delete(`/products/${productId}/modifiers/${id}`)),
+        ]);
       }
 
       toast.success(editing ? "Product updated" : "Product created");
@@ -539,6 +574,37 @@ export default function ProductsPage() {
             <Label>Description</Label>
             <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2} />
           </div>
+
+          {allModifiers.length > 0 && (
+            <div>
+              <Label>Modifiers <span className="text-muted-foreground text-xs">(assign which add-ons are available for this product)</span></Label>
+              <div className="mt-1 max-h-44 overflow-y-auto rounded-md border border-border p-2 space-y-1">
+                {allModifiers.map((m) => (
+                  <label key={m.modifier_id} className="flex items-center gap-2 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={selectedModifierIds.has(m.modifier_id)}
+                      onChange={(e) => {
+                        const next = new Set(selectedModifierIds);
+                        if (e.target.checked) next.add(m.modifier_id);
+                        else next.delete(m.modifier_id);
+                        setSelectedModifierIds(next);
+                      }}
+                      className="h-4 w-4 rounded border-gray-300"
+                    />
+                    <span className="text-sm flex-1">
+                      {m.group_name && <span className="text-muted-foreground mr-1">[{m.group_name}]</span>}
+                      {m.name}
+                    </span>
+                    {Number(m.extra_price) > 0 && (
+                      <span className="text-xs text-muted-foreground">+{formatRupiah(Number(m.extra_price))}</span>
+                    )}
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center gap-2 pt-1">
             <input
               type="checkbox"
