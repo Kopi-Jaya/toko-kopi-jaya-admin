@@ -19,6 +19,7 @@ import {
   Percent,
   LogOut,
   ScanLine,
+  CreditCard,
 } from "lucide-react";
 import {
   Sidebar,
@@ -54,6 +55,7 @@ const navGroups: NavGroup[] = [
     items: [
       { title: "Dashboard", href: "/", icon: LayoutDashboard },
       { title: "Orders", href: "/orders", icon: ShoppingCart },
+      { title: "Kasir", href: "/cashier", icon: CreditCard },
       { title: "Validate QR", href: "/validate", icon: ScanLine },
     ],
   },
