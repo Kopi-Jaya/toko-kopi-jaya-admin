@@ -15,20 +15,26 @@ declare global {
   }
 }
 
-let mapsLoaded = false;
-let mapsLoading = false;
-const mapsCallbacks: (() => void)[] = [];
+// Use window-level flags so state survives Next.js Fast Refresh module re-evaluation
+type W = Window & {
+  __gmLoaded?: boolean;
+  __gmLoading?: boolean;
+  __gmCallbacks?: (() => void)[];
+};
 
 function loadMapsApi(key: string): Promise<void> {
   return new Promise((resolve) => {
-    if (mapsLoaded) { resolve(); return; }
-    mapsCallbacks.push(resolve);
-    if (mapsLoading) return;
-    mapsLoading = true;
+    const w = window as W;
+    if (w.__gmLoaded) { resolve(); return; }
+    if (!w.__gmCallbacks) w.__gmCallbacks = [];
+    w.__gmCallbacks.push(resolve);
+    if (w.__gmLoading) return;
+    w.__gmLoading = true;
     window.initGoogleMaps = () => {
-      mapsLoaded = true;
-      mapsCallbacks.forEach((cb) => cb());
-      mapsCallbacks.length = 0;
+      w.__gmLoaded = true;
+      w.__gmLoading = false;
+      (w.__gmCallbacks ?? []).forEach((cb) => cb());
+      w.__gmCallbacks = [];
     };
     const script = document.createElement("script");
     script.src = `https://maps.googleapis.com/maps/api/js?key=${key}&libraries=places&callback=initGoogleMaps`;
@@ -45,7 +51,7 @@ export function MapPicker({ lat, lng, onChange }: MapPickerProps) {
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
   const markerRef = useRef<google.maps.Marker | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
-  const [ready, setReady] = useState(mapsLoaded);
+  const [ready, setReady] = useState(() => typeof window !== "undefined" && !!(window as W).__gmLoaded);
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? "";
 
   useEffect(() => {
