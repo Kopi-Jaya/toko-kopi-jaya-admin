@@ -266,9 +266,10 @@ export default function ProductsPage() {
 
   const handleSubmit = async () => {
     try {
+      const categoryId = Number(form.category_id);
       const globalBody = {
         name: form.name,
-        category_id: Number(form.category_id),
+        ...(categoryId > 0 ? { category_id: categoryId } : {}),
         base_price: Number(form.base_price),
         earning_points: Number(form.earning_points),
         description: form.description || undefined,
