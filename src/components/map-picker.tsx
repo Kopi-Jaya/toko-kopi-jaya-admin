@@ -72,6 +72,10 @@ export function MapPicker({ lat, lng, onChange }: MapPickerProps) {
       mapTypeControl: false,
       streetViewControl: false,
       fullscreenControl: false,
+      // Prevent the map from consuming scroll events inside the dialog's
+      // scrollable container — require Ctrl+scroll to zoom.
+      gestureHandling: 'cooperative',
+      scrollwheel: false,
     });
     mapInstanceRef.current = map;
 
@@ -135,7 +139,7 @@ export function MapPicker({ lat, lng, onChange }: MapPickerProps) {
         placeholder="Search location…"
         className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       />
-      <div ref={mapRef} className="h-56 w-full rounded-md border bg-muted" />
+      <div ref={mapRef} className="h-64 w-full rounded-md border bg-muted touch-none" />
       {!ready && <p className="text-xs text-muted-foreground">Loading map…</p>}
       {lat && lng && (
         <p className="text-xs text-muted-foreground">
