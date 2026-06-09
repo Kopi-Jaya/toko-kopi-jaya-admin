@@ -46,13 +46,15 @@ export function CrudDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange} disablePointerDismissal>
-      <DialogContent showCloseButton={false}>
-        <DialogHeader>
+      <DialogContent showCloseButton={false} className="flex flex-col max-h-[90vh] p-0 gap-0">
+        <DialogHeader className="px-6 pt-6 pb-4 shrink-0">
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {children}
-          <DialogFooter>
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+          <div className="flex-1 overflow-y-auto px-6 pb-2">
+            <div className="space-y-4">{children}</div>
+          </div>
+          <DialogFooter className="px-6 py-4 shrink-0 border-t bg-background">
             <Button
               type="button"
               variant="outline"
