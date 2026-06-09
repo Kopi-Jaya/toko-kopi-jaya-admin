@@ -110,43 +110,62 @@ export default function OutletsPage() {
   };
 
   const columns: Column<Outlet>[] = [
-    { key: "name", header: "Outlet", render: (o) => (
-      <div className="flex items-center gap-2">
-        {o.logo_url ? (
-          <img src={o.logo_url} alt={o.name} className="h-8 w-8 rounded-md object-cover border" />
-        ) : (
-          <MapPin className="h-4 w-4 text-kj-500" />
-        )}
-        <span className="font-medium">{o.name}</span>
-      </div>
-    )},
-    { key: "address", header: "Address", render: (o) => o.address || "—" },
-    { key: "phone", header: "Phone", render: (o) => o.phone || "—" },
-    { key: "coords", header: "Coordinates", render: (o) => o.latitude && o.longitude
-      ? <span className="text-xs text-muted-foreground">{Number(o.latitude).toFixed(4)}, {Number(o.longitude).toFixed(4)}</span>
-      : <span className="text-xs text-muted-foreground">—</span>
-    },
-    { key: "status", header: "Status", render: (o) => <Badge variant="outline" className={STATUS_COLORS[o.status]}>{o.status}</Badge> },
     {
-      key: "actions", header: "", className: "text-right",
+      key: "name", header: "Outlet",
+      render: (o) => (
+        <div className="flex items-center gap-3 min-w-0">
+          {o.logo_url ? (
+            <img src={o.logo_url} alt={o.name} className="h-9 w-9 shrink-0 rounded-lg object-cover border" />
+          ) : (
+            <div className="h-9 w-9 shrink-0 rounded-lg bg-kj-50 border flex items-center justify-center">
+              <MapPin className="h-4 w-4 text-kj-500" />
+            </div>
+          )}
+          <span className="font-medium truncate">{o.name}</span>
+        </div>
+      ),
+    },
+    {
+      key: "address", header: "Address", className: "max-w-[280px]",
+      render: (o) => (
+        <span className="block truncate text-sm text-muted-foreground" title={o.address || undefined}>
+          {o.address || "—"}
+        </span>
+      ),
+    },
+    {
+      key: "phone", header: "Phone",
+      render: (o) => <span className="text-sm">{o.phone || "—"}</span>,
+    },
+    {
+      key: "status", header: "Status",
+      render: (o) => <Badge variant="outline" className={STATUS_COLORS[o.status]}>{o.status}</Badge>,
+    },
+    {
+      key: "actions", header: "", className: "text-right w-20",
       render: (o) => (
         <div className="flex justify-end gap-1">
-          <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); openEdit(o); }}><Pencil className="h-4 w-4" /></Button>
-          <Button size="sm" variant="ghost" className="text-destructive" disabled={deleteLoading} onClick={async (e) => {
-            e.stopPropagation();
-            setDeleteLoading(true);
-            try {
-              const res = await api.get<{ staff_count?: number; orders_count?: number }>(`/outlets/${o.outlet_id}`);
-              setDeleteTarget({ id: o.outlet_id, label: o.name, links: [
-                { label: "staff members", count: res.data.staff_count ?? 0 },
-                { label: "orders", count: res.data.orders_count ?? 0 },
-              ]});
-            } catch {
-              setDeleteTarget({ id: o.outlet_id, label: o.name });
-            } finally {
-              setDeleteLoading(false);
-            }
-          }}>{deleteLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}</Button>
+          <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); openEdit(o); }}>
+            <Pencil className="h-4 w-4" />
+          </Button>
+          <Button size="sm" variant="ghost" className="text-destructive" disabled={deleteLoading}
+            onClick={async (e) => {
+              e.stopPropagation();
+              setDeleteLoading(true);
+              try {
+                const res = await api.get<{ staff_count?: number; orders_count?: number }>(`/outlets/${o.outlet_id}`);
+                setDeleteTarget({ id: o.outlet_id, label: o.name, links: [
+                  { label: "staff members", count: res.data.staff_count ?? 0 },
+                  { label: "orders", count: res.data.orders_count ?? 0 },
+                ]});
+              } catch {
+                setDeleteTarget({ id: o.outlet_id, label: o.name });
+              } finally {
+                setDeleteLoading(false);
+              }
+            }}>
+            {deleteLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+          </Button>
         </div>
       ),
     },
