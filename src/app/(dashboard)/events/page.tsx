@@ -139,10 +139,11 @@ export default function EventsPage() {
       key: "img",
       header: "",
       className: "w-14",
-      render: (e) =>
-        e.img_url ? (
+      render: (e) => {
+        const proxied = toProxyImageUrl(e.img_url);
+        return proxied ? (
           <Image
-            src={toProxyImageUrl(e.img_url)}
+            src={proxied}
             alt={e.title}
             width={40}
             height={40}
@@ -152,7 +153,8 @@ export default function EventsPage() {
           <div className="h-10 w-10 rounded-md bg-muted flex items-center justify-center text-xs text-muted-foreground">
             —
           </div>
-        ),
+        );
+      },
     },
     { key: "title", header: "Title", render: (e) => <span className="font-medium">{e.title}</span> },
     { key: "tag", header: "Tag", render: (e) => e.tag ? <Badge variant="outline">{e.tag}</Badge> : "—" },
