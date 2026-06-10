@@ -20,6 +20,7 @@ import {
   LogOut,
   ScanLine,
   CreditCard,
+  CalendarDays,
 } from "lucide-react";
 import {
   Sidebar,
@@ -73,6 +74,7 @@ const navGroups: NavGroup[] = [
       { title: "Members", href: "/members", icon: Users },
       { title: "Customers", href: "/customers", icon: Users },
       { title: "Rewards", href: "/rewards", icon: Gift },
+      { title: "Events & Promos", href: "/events", icon: CalendarDays },
     ],
   },
   {
